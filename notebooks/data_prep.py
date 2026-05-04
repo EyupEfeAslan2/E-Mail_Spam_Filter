@@ -25,44 +25,45 @@ import pandas as pd
 
 # TODO: Veri okuma ve temizleme işlemleri bu satırdan itibaren kodlanacaktır.
 from pathlib import Path
-import re
-import emoji
+from core.text_utils import clean_text
 
-path_spam = Path("data/raw/spam")
-path_ham = Path("data/raw/ham")
+path_spam = Path("data/raw/Enron1+spamAssasin/spam")
+path_ham = Path("data/raw/Enron1+spamAssasin/ham")
 output_path = "data/processed/dataset.csv"
 
 def mail(path, label):
     texts = []
-    for file in Path(path).rglob('*.txt'):
+    for file in Path(path).rglob("*"):
+        if not file.is_file():
+            continue
+
         try:
             with open(file, 'r', encoding='utf-8', errors='ignore') as f:
                 text = f.read()
+                if not text.strip():
+                    continue
                 texts.append({'text': text, 'label': label})
         except Exception as e:
             print(f"Error ({file}): {e}")
     return texts
 
 
-def clean_text(text): # Basit Temizleme
+def main():
+    spam_list = mail(path_spam, 1)
+    ham_list = mail(path_ham, 0)
 
-    text = emoji.demojize(text, delimiters=(" ", " ")) # Emoji etiketleme (😂 -> :face_with_tears_of_joy:)(ingilizce)
-    text = re.sub(r'<.*?>', '', text) # HTML temizliği
-    text = re.sub(r'http\S+|www\S+|https\S+', '[URL]', text, flags=re.MULTILINE) # Linkler [URL] olrak değiştiriliyor
-    text = text.lower() # Küçük harfe dönüştür
-    text = re.sub(r'\s+', ' ', text).strip() # Boşlukları temizle
-    text = re.sub(r'[^a-zA-Z0-9\s]', '', text) # Özel karakterleri temizle (Sayılar hariç - sayılar bilgi verebilir)
-    
-    return text
+    df = pd.DataFrame(spam_list + ham_list)
+    if df.empty:
+        raise ValueError(
+            "Veri okunamadi: spam/ham klasor yollarini ve ham veri dosyalarini kontrol edin."
+        )
+
+    df = df.drop_duplicates(subset=['text']).reset_index(drop=True)
+    df['text_cleaned'] = df['text'].apply(clean_text) # temizlenip text_cleaned olarak kaydediliyor
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df.to_csv(output_path, index=False, encoding='utf-8') # df kaydediliyor
 
 
-spam_list = mail(path_spam, 1)
-ham_list = mail(path_ham, 0)
-
-df = pd.DataFrame(spam_list + ham_list)
-df = df.drop_duplicates(subset=['text']).reset_index(drop=True)
-df['text_cleaned'] = df['text'].apply(clean_text) # temizlenip text_cleaned olarak kaydediliyor
-
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-df.to_csv(output_path, index=False, encoding='utf-8') # df kaydediliyor
+if __name__ == "__main__":
+    main()

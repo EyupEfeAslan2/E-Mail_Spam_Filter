@@ -4,3 +4,5 @@ data/raw/
 *.csv
 *.pt
 *.pth
+data/model/
+runs/

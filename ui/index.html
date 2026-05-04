@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Spam Filter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-glass"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <button id="back-btn" class="back-button hidden">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Geri
+            </button>
+            <h1>Spam<span class="highlight">Guard</span></h1>
+            <div class="header-right"></div>
+        </header>
+
+        <!-- PAGE CONTAINER -->
+        <main id="page-container" class="page-container">
+            
+            <!-- PAGE 1: HOME -->
+            <div id="page-home" class="page active">
+                <div class="hero-section">
+                    <h2>Gelen Kutunuzu Güvende Tutun</h2>
+                    <p>Hibrit (Bloom Filter + DistilBERT) teknolojisiyle e-postalarınızı analiz edin.</p>
+                    <button id="nav-to-check" class="btn-primary">Yeni E-Posta Analizi</button>
+                    <button id="nav-to-admin" class="btn-secondary" style="margin-left: 10px;">Yönetici Ayarları</button>
+                    <button id="nav-to-about" class="btn-secondary">Sistem Hakkında</button>
+                </div>
+            </div>
+
+            <!-- PAGE 2: CHECK SPAM -->
+            <div id="page-check" class="page">
+                <h2>E-posta Analizi</h2>
+                <div class="form-group">
+                    <textarea id="email-input" placeholder="E-posta metnini buraya yapıştırın..." rows="8"></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button id="analyze-btn" class="btn-primary">Analiz Et</button>
+                </div>
+                
+                <div id="result-container" class="result-card hidden">
+                    <div class="result-header">
+                        <span id="result-badge" class="badge">Sonuç</span>
+                        <span id="result-layer" class="layer-info">Katman</span>
+                    </div>
+                    <div class="confidence-bar-container">
+                        <div id="confidence-bar" class="confidence-bar"></div>
+                    </div>
+                    <p id="confidence-text" class="confidence-text">Güven Skoru: %0</p>
+                    
+                    <div class="feedback-actions">
+                        <p class="feedback-text">Sonuç yanlış mı?</p>
+                        <button id="report-spam-btn" class="btn-small btn-danger">Spam Olarak Bildir</button>
+                        <button id="report-ham-btn" class="btn-small btn-success">Güvenli Olarak Bildir</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 3: ADMIN SETTINGS -->
+            <div id="page-admin" class="page">
+                <h2>Yönetici Ayarları</h2>
+                <div class="info-card">
+                    <h3>Spam Hassasiyeti (Sensitivity)</h3>
+                    <p>Derin öğrenme modelinin (DistilBERT) bir e-postayı spam olarak sınıflandırması için gereken eşik değerini belirler. Düşük değerler daha agresif spam filtresi sağlar, yüksek değerler ise sadece çok emin olunan durumlarda spam der.</p>
+                    <div style="margin-top: 20px;">
+                        <input type="range" id="sensitivity-slider" min="0.1" max="0.9" step="0.05" value="0.5" style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span>Agresif (0.1)</span>
+                            <span id="sensitivity-value" style="font-weight: bold; color: var(--primary);">0.5</span>
+                            <span>Hoşgörülü (0.9)</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 24px; text-align: right;">
+                        <button id="save-sensitivity-btn" class="btn-primary btn-small">Kaydet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 4: ABOUT -->
+            <div id="page-about" class="page">
+                <h2>Sistem Mimarisi</h2>
+                <div class="info-card">
+                    <h3>1. Bloom Filter (Hızlı Katman)</h3>
+                    <p>O(1) karmaşıklığında çalışan veri yapısı. Daha önce spam olarak işaretlenmiş metinleri anında yakalar.</p>
+                </div>
+                <div class="info-card">
+                    <h3>2. DistilBERT (Derin Katman)</h3>
+                    <p>Derin öğrenme modeli. Metnin anlamsal bütünlüğünü analiz ederek karmaşık spam örüntülerini tespit eder.</p>
+                </div>
+                <div class="info-card">
+                    <h3>3. Sayfa Geçişleri (Stack)</h3>
+                    <p>Bu arayüzdeki sayfa geçişleri, tarayıcı geçmişini simüle eden özel bir <strong>Stack (Yığın)</strong> veri yapısıyla yönetilmektedir.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">Bildirim</div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
