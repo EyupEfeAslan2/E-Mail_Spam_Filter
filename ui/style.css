@@ -36,14 +36,19 @@ body {
     width: 200%;
     height: 200%;
     background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 30%);
+        radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 30%);
     z-index: -1;
     animation: slow-rotate 60s linear infinite;
 }
 
 @keyframes slow-rotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .app-container {
@@ -93,7 +98,8 @@ body {
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    width: 80px; /* fixed width for layout stability */
+    width: 80px;
+    /* fixed width for layout stability */
 }
 
 .back-button:hover {
@@ -107,7 +113,8 @@ body {
 }
 
 .header-right {
-    width: 80px; /* Balance the back button */
+    width: 80px;
+    /* Balance the back button */
 }
 
 /* Main Content Area */
@@ -223,14 +230,20 @@ button {
     color: var(--danger);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
-.btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
 
 .btn-success {
     background: rgba(16, 185, 129, 0.1);
     color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
-.btn-success:hover { background: rgba(16, 185, 129, 0.2); }
+
+.btn-success:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
 
 /* Forms */
 .form-group {
@@ -257,6 +270,23 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
+input[type="password"] {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+input[type="password"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
 .action-buttons {
     display: flex;
     justify-content: flex-end;
@@ -277,8 +307,15 @@ textarea:focus {
 }
 
 @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .result-header {
@@ -389,7 +426,7 @@ textarea:focus {
     padding: 12px 24px;
     border-radius: 30px;
     font-weight: 500;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
 }

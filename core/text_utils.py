@@ -1,11 +1,15 @@
 import re
 
-import emoji
+try:
+    import emoji
+except ModuleNotFoundError:
+    emoji = None
 
 
 def clean_text(text: str) -> str:
     """Basic normalization used by both training and inference paths."""
-    text = emoji.demojize(text, delimiters=(" ", " "))
+    if emoji is not None:
+        text = emoji.demojize(text, delimiters=(" ", " "))
     text = re.sub(r"<.*?>", "", text)
     text = re.sub(r"http\S+|www\S+|https\S+", "[URL]", text, flags=re.MULTILINE)
     text = text.lower()

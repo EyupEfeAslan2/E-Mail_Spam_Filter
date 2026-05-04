@@ -5,4 +5,5 @@ data/raw/
 *.pt
 *.pth
 data/model/
+data/runtime/
 runs/

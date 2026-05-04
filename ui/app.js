@@ -34,7 +34,8 @@ class NavigationStack {
 const appState = {
     navStack: new NavigationStack(),
     currentPage: 'page-home',
-    currentEmailText: ''
+    currentEmailText: '',
+    adminToken: localStorage.getItem('spamguard_admin_token') || ''
 };
 
 // Sayfa Yönlendirme Fonksiyonu
@@ -212,16 +213,59 @@ function displayResult(result) {
 // Admin Ayarları
 async function fetchSensitivity() {
     try {
-        const response = await fetch('/admin/sensitivity');
+        const response = await fetch('/admin/sensitivity', {
+            headers: getAdminHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             const slider = document.getElementById('sensitivity-slider');
             const valDisplay = document.getElementById('sensitivity-value');
             slider.value = data.threshold;
             valDisplay.textContent = data.threshold;
+            await fetchAdminHealth();
+        } else if (response.status === 401) {
+            showToast('Yönetici token gerekli.');
         }
     } catch (e) {
         console.error('Hassasiyet ayarı alınamadı', e);
+    }
+}
+
+function getAdminHeaders() {
+    // Veri yapısı: Hash/token. Admin token API tarafında sabit-zamanlı karşılaştırılır.
+    return appState.adminToken ? { 'X-Admin-Token': appState.adminToken } : {};
+}
+
+async function fetchAdminHealth() {
+    const health = document.getElementById('admin-health');
+    try {
+        const response = await fetch('/admin/health', {
+            headers: getAdminHeaders()
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const readiness = data.ready ? 'Hazır' : 'Hazır Değil';
+        health.textContent = `Model: ${data.model_status} | ${readiness} | Cihaz: ${data.device} | Bloom: ${data.bloom_size}/${data.bloom_hash_count}`;
+    } catch (e) {
+        console.error('Sistem durumu alınamadı', e);
+    }
+}
+
+async function requestRetrain() {
+    try {
+        const response = await fetch('/admin/retrain', {
+            method: 'POST',
+            headers: getAdminHeaders()
+        });
+        if (response.ok) {
+            showToast('Yeniden eğitim kuyruğa alındı.');
+            await fetchAdminHealth();
+        } else {
+            showToast('Hata: Yeniden eğitim başlatılamadı.');
+        }
+    } catch (e) {
+        showToast('Hata: Sunucuya ulaşılamadı.');
+        console.error(e);
     }
 }
 
@@ -232,7 +276,7 @@ async function saveSensitivity() {
     try {
         const response = await fetch('/admin/sensitivity', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
             body: JSON.stringify({ threshold: threshold })
         });
         
@@ -266,8 +310,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Admin İşlemleri
     const slider = document.getElementById('sensitivity-slider');
     const valDisplay = document.getElementById('sensitivity-value');
+    const adminToken = document.getElementById('admin-token');
+    adminToken.value = appState.adminToken;
+    adminToken.addEventListener('input', (e) => {
+        appState.adminToken = e.target.value.trim();
+        localStorage.setItem('spamguard_admin_token', appState.adminToken);
+    });
     slider.addEventListener('input', (e) => {
         valDisplay.textContent = e.target.value;
     });
     document.getElementById('save-sensitivity-btn').addEventListener('click', saveSensitivity);
+    document.getElementById('retrain-btn').addEventListener('click', requestRetrain);
 });
