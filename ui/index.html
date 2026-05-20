@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     <div class="background-glass"></div>
 
@@ -14,7 +16,10 @@
         <!-- HEADER -->
         <header class="app-header">
             <button id="back-btn" class="back-button hidden">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
                 Geri
             </button>
             <h1>Spam<span class="highlight">Guard</span></h1>
@@ -23,14 +28,15 @@
 
         <!-- PAGE CONTAINER -->
         <main id="page-container" class="page-container">
-            
+
             <!-- PAGE 1: HOME -->
             <div id="page-home" class="page active">
                 <div class="hero-section">
                     <h2>Gelen Kutunuzu Güvende Tutun</h2>
                     <p>Hibrit (Bloom Filter + DistilBERT) teknolojisiyle e-postalarınızı analiz edin.</p>
                     <button id="nav-to-check" class="btn-primary">Yeni E-Posta Analizi</button>
-                    <button id="nav-to-admin" class="btn-secondary" style="margin-left: 10px;">Yönetici Ayarları</button>
+                    <button id="nav-to-admin" class="btn-secondary" style="display: none;">Yönetici
+                        Ayarları</button>
                     <button id="nav-to-about" class="btn-secondary">Sistem Hakkında</button>
                 </div>
             </div>
@@ -44,7 +50,7 @@
                 <div class="action-buttons">
                     <button id="analyze-btn" class="btn-primary">Analiz Et</button>
                 </div>
-                
+
                 <div id="result-container" class="result-card hidden">
                     <div class="result-header">
                         <span id="result-badge" class="badge">Sonuç</span>
@@ -54,7 +60,7 @@
                         <div id="confidence-bar" class="confidence-bar"></div>
                     </div>
                     <p id="confidence-text" class="confidence-text">Güven Skoru: %0</p>
-                    
+
                     <div class="feedback-actions">
                         <p class="feedback-text">Sonuç yanlış mı?</p>
                         <button id="report-spam-btn" class="btn-small btn-danger">Spam Olarak Bildir</button>
@@ -68,13 +74,16 @@
                 <h2>Yönetici Ayarları</h2>
                 <div class="info-card">
                     <h3>Spam Hassasiyeti (Sensitivity)</h3>
-                    <p>Derin öğrenme modelinin (DistilBERT) bir e-postayı spam olarak sınıflandırması için gereken eşik değerini belirler. Düşük değerler daha agresif spam filtresi sağlar, yüksek değerler ise sadece çok emin olunan durumlarda spam der.</p>
+                    <p>Derin öğrenme modelinin (DistilBERT) bir e-postayı spam olarak sınıflandırması için gereken eşik
+                        değerini belirler. Düşük değerler daha agresif spam filtresi sağlar, yüksek değerler ise sadece
+                        çok emin olunan durumlarda spam der.</p>
                     <div class="form-group">
                         <input type="password" id="admin-token" placeholder="Yönetici token">
                     </div>
                     <div id="admin-health" class="layer-info">Durum bekleniyor</div>
                     <div style="margin-top: 20px;">
-                        <input type="range" id="sensitivity-slider" min="0.1" max="0.9" step="0.05" value="0.5" style="width: 100%;">
+                        <input type="range" id="sensitivity-slider" min="0.1" max="0.9" step="0.05" value="0.5"
+                            style="width: 100%;">
                         <div style="display: flex; justify-content: space-between; margin-top: 8px;">
                             <span>Agresif (0.1)</span>
                             <span id="sensitivity-value" style="font-weight: bold; color: var(--primary);">0.5</span>
@@ -93,15 +102,80 @@
                 <h2>Sistem Mimarisi</h2>
                 <div class="info-card">
                     <h3>1. Bloom Filter (Hızlı Katman)</h3>
-                    <p>Bit array ve hash fonksiyonlarıyla çalışan veri yapısı. Daha önce spam olarak işaretlenmiş metinleri düşük bellek kullanımıyla anında yakalar.</p>
+                    <p>Bit array ve hash fonksiyonlarıyla çalışan veri yapısı. Daha önce spam olarak işaretlenmiş
+                        metinleri düşük bellek kullanımıyla anında yakalar.<br><br>
+                        <span style="font-size: 0.9em; color: var(--text-muted);">
+                            <strong>Kullanılan Veri Yapıları:</strong> Bloom Filter (Byte Array), Kriptografik Hash
+                            (SHA-256)<br>
+                            <strong>Dosya Konumu:</strong> <code>core/bloom_filter.py</code>
+                        </span>
+                    </p>
                 </div>
                 <div class="info-card">
                     <h3>2. DistilBERT (Derin Katman)</h3>
-                    <p>Derin öğrenme modeli. Metnin anlamsal bütünlüğünü analiz ederek karmaşık spam örüntülerini tespit eder.</p>
+                    <p>Derin öğrenme modeli. Metnin anlamsal bütünlüğünü analiz ederek karmaşık spam örüntülerini tespit
+                        eder.<br><br>
+                        <span style="font-size: 0.9em; color: var(--text-muted);">
+                            <strong>Dosya Konumu:</strong> <code>core/model.py</code>, <code>core/train.py</code>
+                        </span>
+                    </p>
                 </div>
                 <div class="info-card">
                     <h3>3. Sayfa Geçişleri (Stack)</h3>
-                    <p>Bu arayüzdeki sayfa geçişleri, tarayıcı geçmişini simüle eden özel bir <strong>Stack (Yığın)</strong> veri yapısıyla yönetilmektedir.</p>
+                    <p>Bu arayüzdeki sayfa geçişleri, tarayıcı geçmişini simüle eden özel bir <strong>Stack
+                            (Yığın)</strong> veri yapısıyla yönetilmektedir.<br><br>
+                        <span style="font-size: 0.9em; color: var(--text-muted);">
+                            <strong>Kullanılan Veri Yapısı:</strong> Stack (LIFO)<br>
+                            <strong>Dosya Konumu:</strong> <code>ui/app.js</code> (Satır 5-31)
+                        </span>
+                    </p>
+                </div>
+
+                <h2 style="margin-top: 40px; margin-bottom: 20px;">Kod Düzeyinde Veri Yapıları</h2>
+
+                <div class="info-card">
+                    <h3>Hash Fonksiyonu (Kriptografik Özetleme)</h3>
+                    <p style="margin-bottom: 10px;">Bloom Filter'a gelen metinleri indekslere dönüştürmek için
+                        <strong>SHA-256</strong> kullanılır. Modüler aritmetik ile (<code>% size</code>) dizinin
+                        boyutuna sığdırılır.</p>
+                    <pre
+                        style="background: rgba(0,0,0,0.3); color: #00ffcc; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.1);"><code>def _hash_item(self, item: str, i: int) -> int:
+    # Metni ve döngü numarasını birleştirip SHA-256'dan geçir
+    hash_object = hashlib.sha256(f"{i}:{item}".encode('utf-8'))
+    
+    # 16'lık tabandaki özeti tam sayıya çevir ve dizi boyutuna mod al
+    return int(hash_object.hexdigest(), 16) % self.size</code></pre>
+                </div>
+
+                <div class="info-card">
+                    <h3>Stack (Yığın) LIFO</h3>
+                    <p style="margin-bottom: 10px;">Sayfalar arası gezinirken, bir önceki sayfayı hatırlamak için
+                        (Tarayıcı geçmişi gibi) JavaScript üzerinde özel bir Stack (LIFO - Son Giren İlk Çıkar) mimarisi
+                        yazılmıştır.</p>
+                    <pre
+                        style="background: rgba(0,0,0,0.3); color: #00ffcc; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.1);"><code>class NavigationStack {
+    constructor() { this.items = []; }
+
+    push(pageId) { this.items.push(pageId); } // Yeni sayfaya girince
+    
+    pop() { 
+        if (this.isEmpty()) return null;
+        return this.items.pop(); // "Geri Dön" butonuna basınca
+    }
+}</code></pre>
+                </div>
+
+                <div class="info-card">
+                    <h3>Bloom Filter (Bit Array)</h3>
+                    <p style="margin-bottom: 10px;">Bir e-postanın veri tabanında olup olmadığını çok hızlı kontrol eden
+                        O(k) karmaşıklıklı veri yapısı. Klasik bir Array'den çok daha az bellek tüketir (Byte dizisi).
+                    </p>
+                    <pre
+                        style="background: rgba(0,0,0,0.3); color: #00ffcc; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.1);"><code>def add(self, item: str) -> None:
+    # O(k) zaman karmaşıklığı: K adet hash fonksiyonu çalıştırılır
+    for i in range(self.hash_count):
+        index = self._hash_item(item, i)
+        self._set_bit(index) # O indeksteki biti 1 (True) yap</code></pre>
                 </div>
             </div>
 
@@ -113,4 +187,5 @@
 
     <script src="/static/app.js"></script>
 </body>
+
 </html>
