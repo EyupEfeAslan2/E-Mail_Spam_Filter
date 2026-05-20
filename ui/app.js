@@ -35,8 +35,41 @@ const appState = {
     navStack: new NavigationStack(),
     currentPage: 'page-home',
     currentEmailText: '',
-    adminToken: localStorage.getItem('spamguard_admin_token') || ''
+    // Getter/Setter ile localStorage ve state yönetimini senkronize ettik
+    get adminToken() {
+        return localStorage.getItem('spamguard_admin_token') || '';
+    },
+    set adminToken(value) {
+        localStorage.setItem('spamguard_admin_token', value.trim());
+    }
 };
+
+/**
+ * API İstekleri için Temel URL Yapılandırması
+ * Eğer UI dosyalarını Live Server ile (örn: 5500) açıyorsan, Docker backend'ine (8000 veya 9000) erişebilmesi için
+ * backend URL'ini dinamik olarak ayarlar. UI ve API aynı porttaysa direkt relative path (göreceli yol) kullanır.
+ */
+const getApiUrl = (endpoint) => {
+    const BACKEND_PORT = "9000"; 
+    
+    // Eğer UI live server (5500 vb.) ile açıldıysa istekleri Docker backend portuna yönlendirir
+    if (window.location.port && window.location.port !== BACKEND_PORT && window.location.port !== "") {
+        return `http://${window.location.hostname}:${BACKEND_PORT}${endpoint}`;
+    }
+    return endpoint; // Aynı porttaysa veya production ortamındaysa direkt relative path kullanır
+};
+
+// İsteklerde tekrarı önlemek için merkezi Header oluşturucu
+function getRequestHeaders(extraHeaders = {}) {
+    const headers = {
+        'Content-Type': 'application/json',
+        ...extraHeaders
+    };
+    if (appState.adminToken) {
+        headers['X-Admin-Token'] = appState.adminToken;
+    }
+    return headers;
+}
 
 // Sayfa Yönlendirme Fonksiyonu
 function navigateTo(pageId) {
@@ -118,7 +151,7 @@ function showToast(message) {
     }, 3000);
 }
 
-// API İstekleri
+// API İstekleri - E-posta Analizi
 async function analyzeEmail() {
     const textArea = document.getElementById('email-input');
     const text = textArea.value.trim();
@@ -134,9 +167,9 @@ async function analyzeEmail() {
     btn.disabled = true;
 
     try {
-        const response = await fetch('/predict', {
+        const response = await fetch(getApiUrl('/predict'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getRequestHeaders(),
             body: JSON.stringify({ text: text })
         });
 
@@ -146,7 +179,7 @@ async function analyzeEmail() {
         appState.currentEmailText = text;
         displayResult(result);
     } catch (error) {
-        showToast('Hata: Sunucuya ulaşılamadı.');
+        showToast('Hata: Sunucuya ulaşılamadı veya model yüklenemedi.');
         console.error(error);
     } finally {
         btn.textContent = originalText;
@@ -154,21 +187,22 @@ async function analyzeEmail() {
     }
 }
 
+// API İstekleri - Geri Bildirim Raporlama
 async function reportFeedback(type) {
     if (!appState.currentEmailText) return;
 
     const endpoint = type === 'spam' ? '/report/spam' : '/report/ham';
     
     try {
-        const response = await fetch(endpoint, {
+        const response = await fetch(getApiUrl(endpoint), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getRequestHeaders(),
             body: JSON.stringify({ text: appState.currentEmailText })
         });
 
         if (!response.ok) throw new Error('API Hatası');
         
-        const result = await response.json();
+        await response.json();
         showToast('Geri bildiriminiz alındı. Teşekkürler!');
     } catch (error) {
         showToast('Hata: Bildirim gönderilemedi.');
@@ -185,8 +219,6 @@ function displayResult(result) {
     const confText = document.getElementById('confidence-text');
 
     container.classList.remove('hidden');
-    
-    // Reset classes
     badge.className = 'badge';
     
     const percentage = Math.round(result.confidence * 100);
@@ -204,18 +236,19 @@ function displayResult(result) {
     layer.textContent = `Katman: ${result.layer}`;
     confText.textContent = `Güven Skoru: %${percentage}`;
     
-    // Animate bar width
+    // Bar genişliğini animasyonla arttır
     setTimeout(() => {
         bar.style.width = `${percentage}%`;
     }, 100);
 }
 
-// Admin Ayarları
+// Admin Ayarları - Hassasiyet Değerini Çekme
 async function fetchSensitivity() {
     try {
-        const response = await fetch('/admin/sensitivity', {
-            headers: getAdminHeaders()
+        const response = await fetch(getApiUrl('/admin/sensitivity'), {
+            headers: getRequestHeaders()
         });
+        
         if (response.ok) {
             const data = await response.json();
             const slider = document.getElementById('sensitivity-slider');
@@ -224,23 +257,20 @@ async function fetchSensitivity() {
             valDisplay.textContent = data.threshold;
             await fetchAdminHealth();
         } else if (response.status === 401) {
-            showToast('Yönetici token gerekli.');
+            showToast('Yönetici tokenı geçersiz veya gerekli.');
         }
     } catch (e) {
         console.error('Hassasiyet ayarı alınamadı', e);
+        showToast('Hata: Admin ayarlarına erişilemedi.');
     }
 }
 
-function getAdminHeaders() {
-    // Veri yapısı: Hash/token. Admin token API tarafında sabit-zamanlı karşılaştırılır.
-    return appState.adminToken ? { 'X-Admin-Token': appState.adminToken } : {};
-}
-
+// Admin Ayarları - Sistem Durumu (Health) Kontrolü
 async function fetchAdminHealth() {
     const health = document.getElementById('admin-health');
     try {
-        const response = await fetch('/admin/health', {
-            headers: getAdminHeaders()
+        const response = await fetch(getApiUrl('/admin/health'), {
+            headers: getRequestHeaders()
         });
         if (!response.ok) return;
         const data = await response.json();
@@ -248,14 +278,16 @@ async function fetchAdminHealth() {
         health.textContent = `Model: ${data.model_status} | ${readiness} | Cihaz: ${data.device} | Bloom: ${data.bloom_size}/${data.bloom_hash_count}`;
     } catch (e) {
         console.error('Sistem durumu alınamadı', e);
+        health.textContent = 'Sistem durumu: Sunucu bağlantısı yok.';
     }
 }
 
+// Admin İşlemleri - Yeniden Eğitimi Tetikleme
 async function requestRetrain() {
     try {
-        const response = await fetch('/admin/retrain', {
+        const response = await fetch(getApiUrl('/admin/retrain'), {
             method: 'POST',
-            headers: getAdminHeaders()
+            headers: getRequestHeaders()
         });
         if (response.ok) {
             showToast('Yeniden eğitim kuyruğa alındı.');
@@ -269,14 +301,15 @@ async function requestRetrain() {
     }
 }
 
+// Admin İşlemleri - Hassasiyet Değerini Kaydetme
 async function saveSensitivity() {
     const slider = document.getElementById('sensitivity-slider');
     const threshold = parseFloat(slider.value);
     
     try {
-        const response = await fetch('/admin/sensitivity', {
+        const response = await fetch(getApiUrl('/admin/sensitivity'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAdminHeaders() },
+            headers: getRequestHeaders(),
             body: JSON.stringify({ threshold: threshold })
         });
         
@@ -291,34 +324,38 @@ async function saveSensitivity() {
     }
 }
 
-// Event Listeners
+// Event Listeners (Uygulama Yüklendiğinde Tetiklenen Yapılar)
 document.addEventListener('DOMContentLoaded', () => {
-    // Navigasyon Butonları
+    // Navigasyon Buton Dinleyicileri
     document.getElementById('nav-to-check').addEventListener('click', () => navigateTo('page-check'));
     document.getElementById('nav-to-admin').addEventListener('click', () => {
         navigateTo('page-admin');
-        fetchSensitivity(); // Admin sayfasına girince güncel değeri al
+        fetchSensitivity(); // Admin sayfasına geçildiğinde güncel veriyi çek
     });
     document.getElementById('nav-to-about').addEventListener('click', () => navigateTo('page-about'));
     document.getElementById('back-btn').addEventListener('click', navigateBack);
 
-    // İşlem Butonları
+    // Ana İşlem Buton Dinleyicileri
     document.getElementById('analyze-btn').addEventListener('click', analyzeEmail);
     document.getElementById('report-spam-btn').addEventListener('click', () => reportFeedback('spam'));
     document.getElementById('report-ham-btn').addEventListener('click', () => reportFeedback('ham'));
     
-    // Admin İşlemleri
+    // Admin Arayüz Dinleyicileri
     const slider = document.getElementById('sensitivity-slider');
     const valDisplay = document.getElementById('sensitivity-value');
-    const adminToken = document.getElementById('admin-token');
-    adminToken.value = appState.adminToken;
-    adminToken.addEventListener('input', (e) => {
-        appState.adminToken = e.target.value.trim();
-        localStorage.setItem('spamguard_admin_token', appState.adminToken);
+    const adminTokenInput = document.getElementById('admin-token');
+    
+    // Başlangıçta kayıtlı tokenı arayüze bas
+    adminTokenInput.value = appState.adminToken;
+    
+    adminTokenInput.addEventListener('input', (e) => {
+        appState.adminToken = e.target.value; // Setter otomatik tetiklenir ve localStorage'a yazar
     });
+    
     slider.addEventListener('input', (e) => {
         valDisplay.textContent = e.target.value;
     });
+    
     document.getElementById('save-sensitivity-btn').addEventListener('click', saveSensitivity);
     document.getElementById('retrain-btn').addEventListener('click', requestRetrain);
 });
