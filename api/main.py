@@ -8,11 +8,32 @@ from core.rate_limit import SlidingWindowRateLimiter
 from core.retrain import retrain_queue
 from core.security import verify_admin_token
 from api.schemas import BatchEmailRequest, EmailRequest, SensitivityRequest
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI(
     title="Adaptive E-mail Spam Filter API",
     description="Hibrit (Bloom Filter + DistilBERT) ve Adaptif Spam Filtresi"
+)
+
+# güvenilir urller
+origins = [ 
+    "http://localhost:5500",  
+    "http://127.0.0.1:5500",  
+    "http://localhost:9000",  
+    "http://127.0.0.1:9000",
+]
+
+PRODUCTION_DOMAIN = os.getenv("FRONTEND_URL") # canlıya alınırsa bu url da eklenecek
+if PRODUCTION_DOMAIN:
+    origins.append(PRODUCTION_DOMAIN)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # güvenilir urller  
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "OPTIONS"],  # Sadece ihtiyacımız olan metotlar
+    allow_headers=["Content-Type", "X-Admin-Token"], # Sadece JS'de kullandığımız spesifik header'lar
 )
 
 # Servisler global olarak başlatılıyor
